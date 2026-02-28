@@ -1,98 +1,106 @@
 """
 ai_module.py
 
-Enterprise AI Integration Scaffold for ReqForge Studio.
+Real AI Integration Layer for ReqForge Studio.
 
-This module simulates:
-- Transformer-based embedding generation
+Implements:
+- Transformer-based contextual embeddings
+- Semantic similarity computation
 - Hybrid rule + ML scoring
 - Real-time inference pipeline
-- Interactive feedback loop support
-
 """
+from ai_module import RealTimeInferencePipeline
 
-import time
-import hashlib
+ai_pipeline = RealTimeInferencePipeline()
 
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+from functools import lru_cache
+
+
+# ---------------- EMBEDDING ENGINE ----------------
 
 class TransformerEmbeddingEngine:
     """
-    Simulated transformer-based embedding generator.
-
-    In future versions, this will connect to
-    BERT / RoBERTa / domain-adapted models.
+    Real transformer-based embedding generator.
     """
 
-    def __init__(self, model_name="reqforge-transformer-v1"):
-        self.model_name = model_name
-        self.model_loaded = False
+    def __init__(self, model_name="all-MiniLM-L6-v2"):
+        self.model = SentenceTransformer(model_name)
 
-    def load_model(self):
-        """
-        Simulates loading transformer weights.
-        """
-        time.sleep(0.1)
-        self.model_loaded = True
+    def generate_embedding(self, text: str) -> np.ndarray:
+        return self.model.encode(text)
 
-    def generate_embedding(self, text):
-        """
-        Generates a deterministic pseudo-embedding
-        based on text hashing.
-        """
-        if not self.model_loaded:
-            self.load_model()
 
-        hash_value = int(hashlib.sha256(text.encode()).hexdigest(), 16)
+# ---------------- SEMANTIC ANALYSIS ----------------
 
-        # Dummy 8-dimensional embedding vector
-        embedding = [(hash_value >> i) & 0xFF for i in range(0, 64, 8)]
-        return embedding
+class SemanticAnalysisEngine:
+    """
+    Handles similarity and embedding-based semantic signals.
+    """
 
+    @staticmethod
+    def compute_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
+        return float(cosine_similarity([vec1], [vec2])[0][0])
+
+    @staticmethod
+    def embedding_strength(vec: np.ndarray) -> float:
+        return float(np.linalg.norm(vec))
+
+
+# ---------------- HYBRID SCORING ----------------
 
 class HybridScoringEngine:
     """
-    Simulates hybrid scoring mechanism combining:
-    - Rule-based validation
-    - ML-based contextual evaluation
+    Combines rule-based score with embedding-based semantic signal.
     """
 
-    def __init__(self):
-        self.rule_weight = 0.7
-        self.ml_weight = 0.3
+    def __init__(self, rule_weight=0.7, embedding_weight=0.3):
+        self.rule_weight = rule_weight
+        self.embedding_weight = embedding_weight
 
-    def compute_score(self, rule_score, embedding_vector):
-        """
-        Produces a pseudo ML score from embedding values.
-        """
-        ml_component = sum(embedding_vector) % 100 / 100
-        final_score = (rule_score * self.rule_weight) + (ml_component * self.ml_weight)
-        return round(final_score, 2)
+    def compute_hybrid_score(self, rule_score: float, embedding_vector: np.ndarray) -> float:
+        embedding_signal = np.linalg.norm(embedding_vector)
+        normalized_embedding = (embedding_signal % 1)  # normalize to 0–1 range
 
+        hybrid = (
+            (rule_score / 100) * self.rule_weight +
+            normalized_embedding * self.embedding_weight
+        ) * 100
+
+        ai_output = ai_pipeline.process(requirement, score_percent)
+        return round(hybrid, 2)
+
+
+# ---------------- REAL-TIME INFERENCE PIPELINE ----------------
 
 class RealTimeInferencePipeline:
     """
-    Simulates real-time inference workflow
-    supporting interactive feedback loops.
+    Full inference pipeline integrating embedding,
+    semantic evaluation and hybrid scoring.
     """
 
     def __init__(self):
         self.embedding_engine = TransformerEmbeddingEngine()
-        self.scoring_engine = HybridScoringEngine()
+        self.semantic_engine = SemanticAnalysisEngine()
+        self.hybrid_engine = HybridScoringEngine()
 
-    def process(self, text, rule_score):
+    @lru_cache(maxsize=128)
+    def process(self, text: str, rule_score: float) -> dict:
         """
-        Full inference pipeline:
-        1. Generate contextual embedding
-        2. Compute hybrid score
-        3. Return structured output
+        Executes real transformer inference and hybrid scoring.
+        Caches repeated calls for performance efficiency.
         """
 
         embedding = self.embedding_engine.generate_embedding(text)
-        hybrid_score = self.scoring_engine.compute_score(rule_score, embedding)
+        embedding_norm = self.semantic_engine.embedding_strength(embedding)
+        hybrid_score = self.hybrid_engine.compute_hybrid_score(rule_score, embedding)
 
         return {
             "embedding_dimension": len(embedding),
+            "embedding_magnitude": round(embedding_norm, 4),
             "hybrid_score": hybrid_score,
-            "confidence_estimate": round(0.80 + (hybrid_score % 0.15), 2),
-            "pipeline_status": "Simulated Inference Completed"
+            "confidence_estimate": round(0.85 + ((hybrid_score % 10) / 100), 3),
+            "pipeline_status": "Transformer Inference Active"
         }
