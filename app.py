@@ -86,6 +86,7 @@ if "history" not in st.session_state:
 
 if run:
    
+
     for requirement in requirements_list:
 
         if not requirement.strip():
@@ -96,11 +97,6 @@ if run:
         if not is_valid:
             st.error(f"Invalid Requirement: {error_message}")
             st.stop()
-
-    for requirement in requirements_list:
-
-        if not requirement.strip():
-            continue
 
         issues = analyze_requirement(requirement)
         rewritten, explanation = rewrite_requirement(requirement)
