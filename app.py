@@ -6,6 +6,10 @@ from datetime import datetime
 
 import re
 
+from ai_module import RealTimeInferencePipeline
+
+ai_pipeline = RealTimeInferencePipeline()
+
 def validate_requirement(text):
     if not text or not text.strip():
         return False, "Requirement cannot be empty."
