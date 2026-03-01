@@ -9,7 +9,7 @@ Implements:
 - Hybrid rule + ML scoring
 - Real-time inference pipeline
 """
-from ai_module import RealTimeInferencePipeline
+
 
 ai_pipeline = RealTimeInferencePipeline()
 
