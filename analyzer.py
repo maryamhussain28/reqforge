@@ -1,8 +1,12 @@
 from rules import AMBIGUOUS_REPLACEMENTS, WEAK_MODALS
-from ai_module import RealTimeInferencePipeline
+from rules import AMBIGUOUS_REPLACEMENTS, WEAK_MODALS
 
-# Initialize once (prevents reloading model repeatedly)
-_ai_pipeline = RealTimeInferencePipeline()
+# Safe AI import
+try:
+    from ai_module import RealTimeInferencePipeline
+    _ai_pipeline = RealTimeInferencePipeline()
+except Exception:
+    _ai_pipeline = None
 
 
 def analyze_requirement(text):
@@ -25,23 +29,21 @@ def analyze_requirement(text):
     if not any(char.isdigit() for char in text):
         issues.append("No measurable criteria detected")
 
-    # ---------------- AI SEMANTIC SIGNAL (REAL) ----------------
+    # ---------------- AI SEMANTIC SIGNAL (SAFE) ----------------
 
-    try:
-        # Use current rule-based score proxy (10 - issue count)
-        proxy_rule_score = max(100 - (len(issues) * 10), 0)
+    if _ai_pipeline:
+        try:
+            proxy_rule_score = max(100 - (len(issues) * 10), 0)
+            ai_output = _ai_pipeline.process(text, proxy_rule_score)
 
-        ai_output = _ai_pipeline.process(text, proxy_rule_score)
+            # Enrichment only — does NOT change core scoring
+            if ai_output.get("embedding_dimension", 0) < 8:
+                issues.append("Low semantic richness detected")
 
-        # Example semantic enrichment (does not change core logic)
-        if ai_output["embedding_dimension"] < 100:
-            issues.append("Low semantic richness detected")
+            if ai_output.get("confidence_estimate", 1) < 0.85:
+                issues.append("Contextual confidence below optimal threshold")
 
-        if ai_output["confidence_estimate"] < 0.9:
-            issues.append("Contextual confidence below optimal threshold")
-
-    except Exception:
-        # Fail-safe: analysis should never crash
-        issues.append("AI semantic evaluation skipped (fallback mode)")
+        except Exception:
+            issues.append("AI semantic evaluation skipped (fallback mode)")
 
     return issues
