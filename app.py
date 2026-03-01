@@ -3,10 +3,9 @@ from analyzer import analyze_requirement
 from rewriter import rewrite_requirement
 import plotly.graph_objects as go
 import plotly.express as px
-import pandas as pd
 from datetime import datetime
 import re
-import numpy as np
+import pandas as pd
 
 # ---------------------------------------------------
 # CONFIG
@@ -18,73 +17,87 @@ st.set_page_config(
     page_icon="📊"
 )
 
+# ---------------------------------------------------
+# SESSION STATE
+# ---------------------------------------------------
+
+if "theme" not in st.session_state:
+    st.session_state.theme = "Dark"
+
 if "history" not in st.session_state:
     st.session_state.history = []
 
 # ---------------------------------------------------
-# STYLING
+# SIDEBAR
 # ---------------------------------------------------
 
-st.markdown("""
+with st.sidebar:
+    st.markdown("## ReqForge Studio")
+
+    st.session_state.theme = st.radio("Theme Mode", ["Dark", "Light"])
+
+    st.markdown("---")
+
+    page = st.radio(
+        "Navigation",
+        ["Welcome", "Analysis", "Methodology", "Architecture"]
+    )
+
+    st.markdown("---")
+    st.caption("Version 3.0")
+    st.caption("AI-Supported Requirements Governance Platform")
+
+# ---------------------------------------------------
+# THEME ENGINE
+# ---------------------------------------------------
+
+if st.session_state.theme == "Dark":
+    bg = "#0f172a"
+    card = "#111827"
+    text = "#e5e7eb"
+    accent = "#2563eb"
+else:
+    bg = "#f5f7fa"
+    card = "#ffffff"
+    text = "#111827"
+    accent = "#2563eb"
+
+st.markdown(f"""
 <style>
-.main-title {
+.stApp {{
+    background-color: {bg};
+    color: {text};
+}}
+
+.card {{
+    background-color: {card};
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #1f2937;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}}
+
+.title {{
     font-size: 36px;
     font-weight: 700;
-}
-.sub-title {
-    font-size: 16px;
+}}
+
+.subtitle {{
     color: #6b7280;
-}
-.section-title {
-    font-size: 22px;
+}}
+
+.badge {{
+    padding: 6px 12px;
+    border-radius: 6px;
     font-weight: 600;
-}
-.card {
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    background-color: #ffffff;
-}
+}}
+
+.good {{ background-color: #065f46; color: white; }}
+.medium {{ background-color: #92400e; color: white; }}
+.bad {{ background-color: #7f1d1d; color: white; }}
+
 </style>
 """, unsafe_allow_html=True)
-
-# ---------------------------------------------------
-# HEADER
-# ---------------------------------------------------
-
-st.markdown('<div class="main-title">ReqForge Studio</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">AI-Supported Requirements Governance Platform</div>', unsafe_allow_html=True)
-st.markdown("---")
-
-# ---------------------------------------------------
-# KPI DASHBOARD
-# ---------------------------------------------------
-
-total = len(st.session_state.history)
-avg_score = int(np.mean([h["score"] for h in st.session_state.history])) if total else 0
-high_risk = len([h for h in st.session_state.history if h["score"] < 50])
-
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Analyzed", total)
-col2.metric("Average Score", f"{avg_score}%")
-col3.metric("High Risk Count", high_risk)
-
-st.markdown("---")
-
-# ---------------------------------------------------
-# MODE SELECTION
-# ---------------------------------------------------
-
-mode = st.radio("Analysis Mode", ["Single Requirement", "Batch Analysis"], horizontal=True)
-
-if mode == "Single Requirement":
-    input_text = st.text_area("Enter Requirement", height=120)
-    requirements = [input_text]
-else:
-    batch_input = st.text_area("Enter Multiple Requirements (one per line)", height=150)
-    requirements = batch_input.split("\n")
-
-run = st.button("Run Evaluation")
 
 # ---------------------------------------------------
 # VALIDATION
@@ -92,101 +105,196 @@ run = st.button("Run Evaluation")
 
 def validate_requirement(text):
     if not text.strip():
-        return False
+        return False, "Requirement cannot be empty."
     if len(text.split()) < 6:
-        return False
+        return False, "Requirement too short."
     if not re.search(r"\b(shall|must|will|should)\b", text.lower()):
-        return False
-    return True
+        return False, "Include modal verb."
+    return True, ""
 
 # ---------------------------------------------------
-# MAIN ANALYSIS
+# WELCOME
 # ---------------------------------------------------
 
-if run:
+if page == "Welcome":
 
-    results = []
+    st.markdown('<div class="title">ReqForge Studio</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">AI-Supported Requirements Structuring & Quality Evaluation Platform</div>', unsafe_allow_html=True)
+    st.markdown("---")
 
-    for req in requirements:
+    col1, col2 = st.columns([2,1])
 
-        if not req.strip():
-            continue
+    with col1:
+        st.markdown("""
+        ### Executive Overview
 
-        if not validate_requirement(req):
-            st.error("Invalid requirement format.")
-            st.stop()
+        ReqForge Studio provides structured requirement analysis using
+        rule-guided validation and modular AI-supported evaluation pipelines.
 
-        issues = analyze_requirement(req)
-        rewritten, explanation = rewrite_requirement(req)
+        Designed to support:
+        - Structural compliance analysis
+        - Ambiguity detection
+        - Atomicity validation
+        - Verifiability assessment
+        - Batch governance workflows
+        """)
 
-        score = max(100 - len(issues)*20, 0)
+    with col2:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown("### Platform Capabilities")
+        st.write("✔ Structural Quality Index")
+        st.write("✔ Optimization Engine")
+        st.write("✔ Compliance Mapping")
+        st.write("✔ Batch Analytics")
+        st.write("✔ Research-Oriented Architecture")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        results.append({
-            "Requirement": req[:60],
-            "Score": score
-        })
+# ---------------------------------------------------
+# METHODOLOGY
+# ---------------------------------------------------
 
-        st.markdown("## Executive Assessment")
+elif page == "Methodology":
 
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=score,
-            number={'suffix': "%"},
-            gauge={'axis': {'range': [0, 100]},
-                   'bar': {'color': "#2563eb"}}
-        ))
+    st.markdown('<div class="title">Evaluation Methodology</div>', unsafe_allow_html=True)
+    st.markdown("---")
 
-        st.plotly_chart(fig, use_container_width=True)
+    st.markdown("""
+    Structural Quality Index (SQI) evaluates requirements across:
 
-        colA, colB = st.columns(2)
+    1. Modal Compliance  
+    2. Unambiguity  
+    3. Atomic Structure  
+    4. Verifiability  
 
-        with colA:
-            st.markdown("### Original")
-            st.info(req)
+    Hybrid Evaluation:
+    - Structural Analysis
+    - Modular Embedding Interface
+    - Scoring & Compliance Mapping
 
-        with colB:
-            st.markdown("### Optimized")
-            st.success(rewritten)
+    Designed for extensibility toward transformer-based semantic analysis.
+    """)
 
-        # Compliance Matrix
-        st.markdown("### Compliance Matrix")
+# ---------------------------------------------------
+# ARCHITECTURE
+# ---------------------------------------------------
 
-        compliance = pd.DataFrame({
-            "Dimension": ["Clarity", "Unambiguity", "Atomicity", "Verifiability"],
-            "Status": ["Pass" if score >= 70 else "Review"]*4
-        })
+elif page == "Architecture":
 
-        st.table(compliance)
+    st.markdown('<div class="title">System Architecture</div>', unsafe_allow_html=True)
+    st.markdown("---")
 
-        # Risk Classification
-        if score >= 75:
-            st.success("Risk Level: Low")
-        elif score >= 50:
-            st.warning("Risk Level: Moderate")
-        else:
-            st.error("Risk Level: High")
+    st.markdown("""
+    ### Modular Pipeline
 
-        st.markdown("---")
+    - Input Validation Layer  
+    - Structural Rule Engine  
+    - Embedding Engine Interface (Extensible)  
+    - Scoring & Compliance Module  
+    - Optimization/Rewriting Engine  
+    - Reporting & Export Layer  
 
-        st.session_state.history.append({"requirement": req[:60], "score": score})
+    The embedding layer is abstracted to allow integration of pretrained
+    transformer-based models without modifying evaluation logic.
+    """)
 
-    # ---------------------------------------------------
-    # BATCH SUMMARY
-    # ---------------------------------------------------
+# ---------------------------------------------------
+# ANALYSIS
+# ---------------------------------------------------
 
-    if len(results) > 1:
+elif page == "Analysis":
 
-        st.markdown("## Batch Summary")
+    st.markdown('<div class="title">Executive Analysis Dashboard</div>', unsafe_allow_html=True)
+    st.markdown("---")
 
-        df = pd.DataFrame(results)
+    mode = st.radio("Mode", ["Single Requirement", "Batch Analysis"], horizontal=True)
 
-        avg_batch = int(df["Score"].mean())
-        st.metric("Batch Average Score", f"{avg_batch}%")
+    if mode == "Single Requirement":
+        user_input = st.text_area("Enter Requirement", height=120)
+        requirements = [user_input]
+    else:
+        batch_input = st.text_area("Enter Multiple Requirements (one per line)", height=150)
+        requirements = batch_input.split("\n")
 
-        fig_bar = px.bar(df, x="Requirement", y="Score", height=400)
-        st.plotly_chart(fig_bar, use_container_width=True)
+    run = st.button("Run Evaluation")
+
+    if run:
+
+        results = []
+
+        for req in requirements:
+
+            if not req.strip():
+                continue
+
+            valid, msg = validate_requirement(req)
+            if not valid:
+                st.error(msg)
+                st.stop()
+
+            issues = analyze_requirement(req)
+            rewritten, explanation = rewrite_requirement(req)
+
+            score = max(100 - len(issues)*20, 0)
+
+            results.append({
+                "Requirement": req,
+                "Score": score,
+                "Issues": len(issues)
+            })
+
+            st.markdown("---")
+
+            if score >= 75:
+                status_class = "good"
+            elif score >= 50:
+                status_class = "medium"
+            else:
+                status_class = "bad"
+
+            st.markdown(f'<span class="badge {status_class}">Score: {score}%</span>', unsafe_allow_html=True)
+
+            fig = go.Figure(go.Indicator(
+                mode="gauge+number",
+                value=score,
+                number={'suffix': "%"},
+                gauge={'axis': {'range': [0, 100]},
+                       'bar': {'color': accent}}
+            ))
+
+            st.plotly_chart(fig, use_container_width=True)
+
+            colA, colB = st.columns(2)
+
+            with colA:
+                st.markdown('<div class="card">', unsafe_allow_html=True)
+                st.markdown("### Original")
+                st.write(req)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            with colB:
+                st.markdown('<div class="card">', unsafe_allow_html=True)
+                st.markdown("### Optimized")
+                st.write(rewritten)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+        # ---------------- BATCH SUMMARY ----------------
+        if len(results) > 1:
+
+            st.markdown("---")
+            st.markdown("## Batch Summary")
+
+            df = pd.DataFrame(results)
+
+            avg_score = int(df["Score"].mean())
+
+            col1, col2 = st.columns(2)
+            col1.metric("Average Score", f"{avg_score}%")
+            col2.metric("Total Requirements", len(df))
+
+            fig_bar = px.bar(df, x="Requirement", y="Score", height=400)
+            st.plotly_chart(fig_bar, use_container_width=True)
 
 # ---------------------------------------------------
 
 st.markdown("---")
-st.caption("ReqForge Studio • AI-Supported Structural Requirement Evaluation System")
+st.caption("ReqForge Studio v3.0 • AI-Supported Requirements Governance Platform")
