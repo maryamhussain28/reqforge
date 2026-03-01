@@ -6,7 +6,7 @@ from datetime import datetime
 import re
 
 # ---------------------------------------------------
-# CONFIGURATION
+# PAGE CONFIG
 # ---------------------------------------------------
 
 st.set_page_config(
@@ -16,57 +16,68 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------
-# THEME TOGGLE
+# SESSION INIT
 # ---------------------------------------------------
 
 if "theme" not in st.session_state:
     st.session_state.theme = "Dark"
 
+# ---------------------------------------------------
+# SIDEBAR
+# ---------------------------------------------------
+
 with st.sidebar:
-    st.title("⚙️ Platform Controls")
+    st.markdown("## ⚙️ Controls")
+
     st.session_state.theme = st.radio(
-        "Theme Mode",
+        "Theme",
         ["Dark", "Light"]
     )
 
     st.markdown("---")
-    st.markdown("### Navigation")
+
     page = st.radio(
-        "Go to",
-        ["Requirement Analysis", "Platform Overview", "Methodology"]
+        "Navigation",
+        ["Requirement Analysis", "Overview", "Methodology"]
     )
 
 # ---------------------------------------------------
-# THEME STYLING
+# THEME ENGINE (FIXED)
 # ---------------------------------------------------
 
 if st.session_state.theme == "Dark":
-    bg_color = "#0f172a"
-    card_color = "#111827"
-    text_color = "#e5e7eb"
+    bg = "#0f172a"
+    card = "#111827"
+    text = "#e5e7eb"
+    accent = "#2563eb"
 else:
-    bg_color = "#f8fafc"
-    card_color = "#ffffff"
-    text_color = "#111827"
+    bg = "#f8fafc"
+    card = "#ffffff"
+    text = "#111827"
+    accent = "#2563eb"
 
 st.markdown(f"""
 <style>
-body {{
-    background-color: {bg_color};
-    color: {text_color};
+.stApp {{
+    background-color: {bg};
+    color: {text};
 }}
 
-.section {{
-    padding: 20px;
-    border-radius: 8px;
-    background-color: {card_color};
+.section-card {{
+    background-color: {card};
+    padding: 24px;
+    border-radius: 10px;
     border: 1px solid #1f2937;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }}
 
-.metric-card {{
-    padding: 15px;
-    border-radius: 8px;
-    background-color: {card_color};
+.header-title {{
+    font-size: 32px;
+    font-weight: 700;
+}}
+
+.subtle {{
+    color: #6b7280;
 }}
 
 .badge {{
@@ -74,14 +85,16 @@ body {{
     border-radius: 6px;
     font-weight: 600;
 }}
+
 .good {{ background-color: #065f46; color: white; }}
 .medium {{ background-color: #92400e; color: white; }}
 .bad {{ background-color: #7f1d1d; color: white; }}
+
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------
-# VALIDATION FUNCTION
+# VALIDATION
 # ---------------------------------------------------
 
 def validate_requirement(text):
@@ -89,216 +102,176 @@ def validate_requirement(text):
         return False, "Requirement cannot be empty."
 
     if len(text.split()) < 6:
-        return False, "Requirement is too short. Provide a complete structured sentence."
+        return False, "Requirement is too short."
 
     if not re.search(r"\b(shall|must|will|should)\b", text.lower()):
-        return False, "Requirement must contain a modal verb (e.g., 'shall', 'must')."
-
-    if not re.search(r"[a-zA-Z]", text):
-        return False, "Requirement must contain valid textual content."
-
-    if not re.search(r"\b(is|are|provide|process|authenticate|display|calculate|store|send|receive|generate)\b", text.lower()):
-        return False, "Requirement does not appear to contain a valid action."
+        return False, "Must include modal verb (shall/must/will/should)."
 
     return True, ""
 
 # ---------------------------------------------------
-# PAGE ROUTING
+# OVERVIEW PAGE
 # ---------------------------------------------------
 
-if page == "Platform Overview":
+if page == "Overview":
 
-    st.title("ReqForge Studio")
-    st.subheader("AI-Supported Requirements Structuring & Governance Platform")
+    st.markdown('<div class="header-title">ReqForge Studio</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtle">AI-Supported Requirements Governance Platform</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
 
     st.markdown("""
-    ReqForge Studio is a structured requirements governance prototype designed to:
-    - Evaluate structural requirement quality
-    - Detect ambiguity and non-atomic constructs
-    - Improve measurability and compliance
-    - Support enterprise-level documentation workflows
+    ### Platform Capabilities
 
-    This platform demonstrates modular AI-supported architecture with extensible embedding integration.
+    - Structural quality validation  
+    - Ambiguity and atomicity detection  
+    - Optimization and reformulation  
+    - Compliance alignment reporting  
+    - Executive-level scoring dashboard  
+
+    Designed as a modular AI-supported research prototype with extensible architecture.
     """)
+
+# ---------------------------------------------------
+# METHODOLOGY PAGE
+# ---------------------------------------------------
 
 elif page == "Methodology":
 
-    st.title("Evaluation Methodology")
+    st.markdown('<div class="header-title">Evaluation Framework</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtle">Structural Quality Index (SQI)</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
 
     st.markdown("""
-    ### Structural Quality Index (SQI)
-
     The SQI evaluates requirements across four dimensions:
 
-    1. Modal Compliance
-    2. Unambiguity
-    3. Atomicity
-    4. Verifiability
+    1. Modal Compliance  
+    2. Unambiguity  
+    3. Atomicity  
+    4. Verifiability  
 
-    Each structural issue reduces the aggregate score.
+    Hybrid evaluation combines:
+    - Rule-based structural checks
+    - Semantic structuring logic
+    - Extensible embedding interface
 
-    Hybrid evaluation approach:
-    - Rule-guided validation
-    - Semantic structuring pipeline
-    - Modular embedding architecture (extensible)
-
-    This design supports scalable enterprise integration.
+    Designed for enterprise-scale requirement governance.
     """)
 
 # ---------------------------------------------------
-# MAIN ANALYSIS PAGE
+# MAIN ANALYSIS
 # ---------------------------------------------------
 
 elif page == "Requirement Analysis":
 
-    st.title("ReqForge Studio")
-    st.caption("Enterprise Requirements Optimization Dashboard")
+    st.markdown('<div class="header-title">Executive Analysis Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtle">Automated Structural Quality Evaluation</div>', unsafe_allow_html=True)
 
-    mode = st.radio(
-        "Analysis Mode",
-        ["Single Requirement", "Batch Analysis"],
-        horizontal=True
-    )
+    st.markdown("---")
 
-    if mode == "Single Requirement":
-        requirement = st.text_area("Enter requirement statement", height=120)
-        requirements_list = [requirement]
-    else:
-        batch_input = st.text_area(
-            "Enter multiple requirements (one per line)",
-            height=150
-        )
-        requirements_list = batch_input.split("\n")
+    requirement = st.text_area("Enter Requirement", height=120)
 
-    run = st.button("Run Structural Evaluation")
-
-    if "history" not in st.session_state:
-        st.session_state.history = []
+    run = st.button("Run Evaluation")
 
     if run:
 
-        for requirement in requirements_list:
+        valid, msg = validate_requirement(requirement)
 
-            if not requirement.strip():
-                continue
+        if not valid:
+            st.error(msg)
+            st.stop()
 
-            is_valid, error_message = validate_requirement(requirement)
+        issues = analyze_requirement(requirement)
+        rewritten, explanation = rewrite_requirement(requirement)
 
-            if not is_valid:
-                st.error(f"Invalid Requirement: {error_message}")
-                st.stop()
+        score = 100 - len(issues) * 20
+        score = max(score, 0)
 
-            issues = analyze_requirement(requirement)
-            rewritten, explanation = rewrite_requirement(requirement)
+        # STATUS BADGE
+        if score >= 75:
+            status = "Compliant"
+            status_class = "good"
+        elif score >= 50:
+            status = "Needs Improvement"
+            status_class = "medium"
+        else:
+            status = "Critical Revision"
+            status_class = "bad"
 
-            modal_issue = any("modal" in issue.lower() for issue in issues)
-            ambiguity_issue = any("ambiguous" in issue.lower() for issue in issues)
-            atomic_issue = any("compound" in issue.lower() for issue in issues)
-            measurable_issue = any("measurable" in issue.lower() for issue in issues)
+        st.markdown(f'<span class="badge {status_class}">{status}</span>', unsafe_allow_html=True)
 
-            overall_score = 4 - sum([modal_issue, ambiguity_issue, atomic_issue, measurable_issue])
-            score_percent = int((overall_score / 4) * 100)
+        # METRICS ROW
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Quality Score", f"{score}%")
+        col2.metric("Issues Identified", len(issues))
+        col3.metric("Confidence Index", f"{85 + score//5}%")
 
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            # Executive Summary
-            st.markdown("## Executive Assessment")
-
-            if score_percent >= 75:
-                status_class = "good"
-                status_text = "Compliant"
-            elif score_percent >= 50:
-                status_class = "medium"
-                status_text = "Requires Improvement"
-            else:
-                status_class = "bad"
-                status_text = "Critical Revision Required"
-
-            st.markdown(f'<span class="badge {status_class}">{status_text}</span>', unsafe_allow_html=True)
-
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Quality Score", f"{score_percent}%")
-            col2.metric("Issues Identified", len(issues))
-            col3.metric("Confidence Index", f"{85 + overall_score*3}%")
-
-            # Gauge
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=score_percent,
-                number={'suffix': "%"},
-                gauge={'axis': {'range': [0, 100]},
-                       'bar': {'color': "#2563eb"}}
-            ))
-            st.plotly_chart(fig, use_container_width=True)
-
-            # Transformation
-            st.markdown("## Requirement Transformation")
-
-            colA, colB = st.columns(2)
-
-            with colA:
-                st.markdown("### Original")
-                st.markdown('<div class="section">', unsafe_allow_html=True)
-                st.write(requirement)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-            with colB:
-                st.markdown("### Optimized")
-                st.markdown('<div class="section">', unsafe_allow_html=True)
-                st.write(rewritten)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-            # Issue Classification
-            st.markdown("## Issue Classification")
-            if issues:
-                for issue in issues:
-                    st.write(f"- {issue}")
-            else:
-                st.write("No structural issues identified.")
-
-            # Standards Alignment
-            st.markdown("## Standards Alignment")
-
-            compliance_map = {
-                "Clarity": not modal_issue,
-                "Unambiguity": not ambiguity_issue,
-                "Atomicity": not atomic_issue,
-                "Verifiability": not measurable_issue
+        # GAUGE
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=score,
+            number={'suffix': "%"},
+            gauge={
+                'axis': {'range': [0, 100]},
+                'bar': {'color': accent}
             }
+        ))
 
-            for k, v in compliance_map.items():
-                st.write(f"{k}: {'Aligned' if v else 'Needs Revision'}")
+        st.plotly_chart(fig, use_container_width=True)
 
-            # Export
-            report_text = f"""
-ReqForge Analysis Report
+        st.markdown("---")
+
+        # TRANSFORMATION CARDS
+        colA, colB = st.columns(2)
+
+        with colA:
+            st.markdown('<div class="section-card">', unsafe_allow_html=True)
+            st.markdown("### Original Requirement")
+            st.write(requirement)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with colB:
+            st.markdown('<div class="section-card">', unsafe_allow_html=True)
+            st.markdown("### Optimized Requirement")
+            st.write(rewritten)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown("---")
+
+        # ISSUE LIST
+        st.markdown("### Issue Classification")
+
+        if issues:
+            for issue in issues:
+                st.write(f"- {issue}")
+        else:
+            st.success("No structural issues identified.")
+
+        st.markdown("---")
+
+        # EXPORT
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        report = f"""
+ReqForge Executive Report
 Timestamp: {timestamp}
 
-Original Requirement:
+Original:
 {requirement}
 
-Optimized Requirement:
+Optimized:
 {rewritten}
 
-Score: {score_percent}%
+Score: {score}%
 Issues: {len(issues)}
 """
 
-            st.download_button(
-                "Download Report",
-                report_text,
-                file_name="reqforge_report.txt"
-            )
-
-            st.session_state.history.append(
-                {"requirement": requirement, "score": score_percent}
-            )
-
-    # Session History
-    if st.session_state.history:
-        st.markdown("## Session History")
-        for entry in st.session_state.history:
-            st.write(f"- {entry['requirement'][:60]}... | Score: {entry['score']}%")
+        st.download_button(
+            "Download Executive Report",
+            report,
+            file_name="reqforge_report.txt"
+        )
 
 st.markdown("---")
-st.caption("ReqForge Studio v1.3 • AI-Supported Requirements Governance Prototype")
+st.caption("ReqForge Studio v2.0 • Enterprise AI Requirements Governance Platform")
