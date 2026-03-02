@@ -1,6 +1,4 @@
 streamlit
 plotly
-sentence-transformers
-scikit-learn
-torch
 numpy
+
